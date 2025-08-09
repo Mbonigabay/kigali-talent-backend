@@ -1,0 +1,45 @@
+name: Node.js Docker Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Check out the repository code.
+      # This action pulls the latest code from your repository.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js environment.
+      # This is useful for running any local scripts if needed, though
+      # the Docker build process is self-contained.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Step 3: Log in to Docker Hub.
+      # This step uses Docker secrets to authenticate with Docker Hub
+      # so the workflow can push the new image.
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Step 4: Build and push the Docker image.
+      # This is the core step that builds the image from your Dockerfile
+      # and pushes it to your repository on Docker Hub with two tags:
+      # 'latest' and the release's version tag (e.g., 'v1.0.0').
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            mbonigabay/kigali-talent-backend:latest
+            mbonigabay/kigali-talent-backend:${{ github.event.release.tag_name }}

@@ -7,7 +7,7 @@ import notFoundHandler from './middleware/notFoundHandler.js';
 import logger from './middleware/logger.js';
 import appLogger from './config/log4js.js';
 
-const port = process.env.PORT;
+const port = process.env.PORT || 8000;
 
 const app = express();
 
