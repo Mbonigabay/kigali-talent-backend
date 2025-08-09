@@ -1,11 +1,11 @@
 import express from 'express';
 import path from 'path';
-import errorHandler from './middleware/error.js';
-import mainRouter from './route/index.js';
-import './repository/db.js'
-import notFoundHandler from './middleware/notFoundHandler.js';
-import logger from './middleware/logger.js';
-import appLogger from './config/log4js.js';
+import errorHandler from './src/middleware/error.js';
+import mainRouter from './src/route/index.js';
+import './src/repository/db.js'
+import notFoundHandler from './src/middleware/notFoundHandler.js';
+import logger from './src/middleware/logger.js';
+import appLogger from './src/config/log4js.js';
 
 const port = process.env.PORT || 8000;
 
