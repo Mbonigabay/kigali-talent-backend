@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
-import appLogger from '../config/log4js.js';
+import log4js from 'log4js';
+const logger = log4js.getLogger('emailService');
 
 const email = process.env.EMAIL_ADDRESS;
 const port = process.env.EMAIL_PASSWORD;
@@ -31,8 +32,8 @@ export const sendEmail = async (email, subject, text) => {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        appLogger.info(`Email sent to ${email} with subject "${subject}": ${info.messageId}`);
+        logger.info(`Email sent to ${email} with subject "${subject}": ${info.messageId}`);
     } catch (error) {
-        appLogger.error(`Failed to send email to ${email}:`, error);
+        logger.error(`Failed to send email to ${email}:`, error);
     }
 };

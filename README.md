@@ -69,7 +69,7 @@ kigali-talent-backend/
 │   ├── config/             # Log4js configuration
 │   ├── controllers/        # Handles API requests and responses
 │   ├── middleware/         # Custom Express middleware
-│   ├── repositories/       # Database access logic
+│   ├── repository/       # Database access logic
 │   ├── routes/             # Defines API endpoints
 │   ├── services/           # Business logic
 │   └── utils/              # Helper functions

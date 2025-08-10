@@ -1,47 +1,159 @@
+// This file centralizes all database logic into a single module.
+// It creates a shared connection and handles all table creation.
+
 import Database from 'better-sqlite3';
-import appLogger from '../config/log4js.js';
+// Import log4js for logging messages
+import log4js from 'log4js';
+// Import the seeding function
+import { initSeedData } from './dbSeeder.js';
+
+// Use a dedicated logger for this module
+const logger = log4js.getLogger('db');
 
 // Create a single, shared database instance.
 const db = new Database('./database.sqlite');
-appLogger.info('Database connected successfully.');
+logger.info('Database connected successfully.');
 
-// A method to create the 'users' table.
+// A method to create the 'users' table with all the new authentication fields.
 const createUsersTable = () => {
     db.exec(`
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL
+            id TEXT PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            state INTEGER NOT NULL CHECK (state IN (0, 1)),
+            isLocked INTEGER NOT NULL CHECK (isLocked IN (0, 1)),
+            lockedType TEXT CHECK (lockedType IN ('GENERAL', 'NOT_VERIFIED')),
+            role TEXT NOT NULL CHECK (role IN ('ROLE_APPLICANT', 'ROLE_ADMIN'))
         )
     `);
-    appLogger.info("'users' table created or already exists.");
+    logger.info("'users' table created or already exists.");
 };
 
-// A method to create the 'products' table.
-const createProductsTable = () => {
+// A method to create the 'companies' table.
+const createCompaniesTable = () => {
     db.exec(`
-        CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            price REAL NOT NULL
+        CREATE TABLE IF NOT EXISTS companies (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL UNIQUE,
+            description TEXT,
+            sector TEXT,
+            location TEXT,
+            website TEXT
         )
     `);
-    appLogger.info("'products' table created or already exists.");
+    logger.info("'companies' table created or already exists.");
 };
 
-// A dedicated function to initialize all necessary tables.
-const initializeDb = () => {
+// A method to create the 'jobs' table with all its constraints.
+const createJobsTable = () => {
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS jobs (
+            id TEXT PRIMARY KEY,
+            jobNumber TEXT NOT NULL UNIQUE,
+            slug TEXT NOT NULL UNIQUE,
+            state INTEGER NOT NULL CHECK (state IN (0, 1)),
+            jobStatus TEXT NOT NULL CHECK (jobStatus IN ('created', 'published', 'closedForApplication', 'shortlisted', 'interview', 'offerSent', 'closed')),
+            title TEXT NOT NULL,
+            companyId TEXT NOT NULL,
+            location TEXT,
+            locationType TEXT CHECK (locationType IN ('onsite', 'remote')),
+            dateCreated INTEGER NOT NULL,
+            datePublished INTEGER,
+            deadline INTEGER,
+            jobType TEXT CHECK (jobType IN ('fulltime', 'partime', 'volunteer', 'contract', 'internship')),
+            yearsOfExperienceNeed TEXT,
+            numberOfOpenPosition INTEGER,
+            FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
+        )
+    `);
+    logger.info("'jobs' table created or already exists.");
+};
+
+// A new method to create the 'applicants' table.
+const createApplicantsTable = () => {
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS applicants (
+            id TEXT PRIMARY KEY,
+            userId TEXT NOT NULL UNIQUE,
+            firstName TEXT NOT NULL,
+            lastName TEXT NOT NULL,
+            address TEXT,
+            phoneNumber TEXT,
+            email TEXT NOT NULL UNIQUE,
+            linkedin TEXT,
+            summary TEXT,
+            skills TEXT,
+            FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        )
+    `);
+    logger.info("'applicants' table created or already exists.");
+};
+
+// A new method to create the 'job_applications' table.
+const createJobApplicationsTable = () => {
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS job_applications (
+            id TEXT PRIMARY KEY,
+            applicantId TEXT NOT NULL,
+            jobId TEXT NOT NULL,
+            state INTEGER NOT NULL CHECK (state IN (0, 1)),
+            jobApplicationStatus TEXT NOT NULL CHECK (jobApplicationStatus IN ('submitted', 'viewed', 'interviewing', 'offer', 'hired', 'rejected')),
+            dateCreated INTEGER NOT NULL,
+            lastDateModified INTEGER NOT NULL,
+            UNIQUE(applicantId, jobId),
+            FOREIGN KEY (applicantId) REFERENCES applicants(id) ON DELETE CASCADE,
+            FOREIGN KEY (jobId) REFERENCES jobs(id) ON DELETE CASCADE
+        )
+    `);
+    logger.info("'job_applications' table created or already exists.");
+};
+
+// A method to create the 'verification_tokens' table.
+const createVerificationTokensTable = () => {
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS verification_tokens (
+            token TEXT PRIMARY KEY,
+            userId TEXT NOT NULL,
+            expiresAt INTEGER NOT NULL,
+            FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        )
+    `);
+    logger.info("'verification_tokens' table created or already exists.");
+};
+
+// A method to create the 'password_reset_tokens' table.
+const createPasswordResetTokensTable = () => {
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+            token TEXT PRIMARY KEY,
+            userId TEXT NOT NULL,
+            expiresAt INTEGER NOT NULL,
+            FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        )
+    `);
+    logger.info("'password_reset_tokens' table created or already exists.");
+};
+
+/**
+ * A dedicated function to initialize all necessary tables.
+ * This function is now exported to be called from the main entry point.
+ */
+export const initializeDb = () => {
     try {
         createUsersTable();
-        createProductsTable();
-        appLogger.info('All database tables created or already exist.');
+        createCompaniesTable();
+        createJobsTable();
+        createApplicantsTable();
+        createJobApplicationsTable();
+        createVerificationTokensTable();
+        createPasswordResetTokensTable();
+        logger.info('All database tables created or already exist.');
     } catch (error) {
-        appLogger.error('Failed to initialize database tables:', error);
+        logger.error('Failed to initialize database tables:', error);
         throw error;
     }
 };
 
-// Immediately initialize the database when this module is loaded.
-initializeDb();
-
-// Export the single database instance for use by other modules.
+// The db instance is exported but not yet initialized until the function is called.
 export default db;
