@@ -47,22 +47,24 @@ Follow these steps to get a local copy of the project up and running.
 
 ### **Project Structure**
 
-kigali-talent-backend/  
-├── src/  
-│   ├── config/             \# Log4js and other configurations  
-│   ├── controller/        \# Handles API requests and responses  
-│   ├── middleware/         \# Custom Express middleware  
-│   ├── repository/       \# Database access logic (Auth, Applicant, Job, etc.)  
-│   ├── route/             \# Defines API endpoints  
-│   ├── stateMachine/             \# Defines state machines  
-│   ├── service/           \# Business logic and state machines  
-│   └── util/              \# Helper functions (date, response format)  
-├── .dockerignore           \# Specifies files to ignore in Docker image  
-├── Dockerfile              \# Instructions for building the Docker image  
-├── docker-compose.yml      \# Docker Compose setup  
-├── index.js                \# Main application entry point  
-├── package.json  
+```
+kigali-talent-backend/
+├── src/
+│   ├── config/             # Log4js and other configurations
+│   ├── controller/        # Handles API requests and responses
+│   ├── middleware/         # Custom Express middleware
+│   ├── repository/       # Database access logic (Auth, Applicant, Job, etc.)
+│   ├── route/             # Defines API endpoints
+│   ├── service/           # Defines business logic 
+│   ├── stateMachine/      # Defines state machines
+│   └── util/              # Helper functions (date, response format)
+├── .dockerignore           # Specifies files to ignore in Docker image
+├── Dockerfile              # Instructions for building the Docker image
+├── docker-compose.yml      # Docker Compose setup
+├── index.js                # Main application entry point
+├── package.json
 └── README.md
+```
 
 ### **API Endpoints**
 
