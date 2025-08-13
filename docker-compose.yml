@@ -7,6 +7,7 @@ services:
       - "8000:8000"
     environment:
       - PORT=8000
-      - EMAIL_USERNAME=username
-      - EMAIL_ADDRESS=email
-      - EMAIL_PASSWORD=password
+      - EMAIL_USERNAME='Alayna Lesch'
+      - EMAIL_ADDRESS='alayna.lesch@ethereal.email'
+      - EMAIL_PASSWORD='xcuUbEdZN6DCUzbcB6'
+      - JWT_SECRET='new-test-secret-for-debugging-12345'

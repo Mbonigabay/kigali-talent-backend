@@ -6,7 +6,6 @@
  * @param {any} payload The data to be sent in the response.
  */
  export const sendResponse = (res, code, message, payload) => {
-    // Return a JSON object with the requested format
     return res.status(code).json({
         code,
         message,

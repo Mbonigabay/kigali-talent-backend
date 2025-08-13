@@ -23,7 +23,7 @@ const JOB_APPLICATION_STATE = { ACTIVE: 1 };
 /**
  * Populates the database with initial data.
  */
-export const initSeedData = () => {
+ export const initSeedData = () => {
     try {
         const existingUsers = userRepository.findAll();
         if (existingUsers.length > 0) {
@@ -80,6 +80,26 @@ export const initSeedData = () => {
             };
             applicantRepository.insert(applicantProfile);
             applicantProfiles.push(applicantProfile);
+
+            // Add education and experience for each applicant
+            applicantRepository.insertEducation({
+                id: uuidv4(),
+                applicantId: applicantProfile.id,
+                school: `University of Test ${i}`,
+                levelOfEducation: 'Bachelor\'s Degree',
+                fieldOfStudy: 'Computer Science',
+                description: 'Graduated with honors.',
+                yearOfGraduation: 2020 + i
+            });
+            applicantRepository.insertExperience({
+                id: uuidv4(),
+                applicantId: applicantProfile.id,
+                companyName: `Test Company ${i}`,
+                role: 'Junior Developer',
+                startDate: new Date('2021-01-01').getTime(),
+                endDate: new Date('2023-01-01').getTime(),
+                description: 'Worked on various projects.'
+            });
         }
 
         // 3. Create five COMPANIES
@@ -99,6 +119,13 @@ export const initSeedData = () => {
 
         // 4. Create five JOBS
         const jobTitles = ['Software Engineer', 'Data Scientist', 'Product Manager', 'UX Designer', 'DevOps Engineer'];
+        const jobDescriptions = [
+            'We are looking for a skilled Software Engineer to join our team.',
+            'Join our data science team to analyze and interpret complex data.',
+            'As a Product Manager, you will be responsible for a product lifecycle from conception to launch.',
+            'We are seeking a talented UX Designer to create amazing user experiences.',
+            'Join our DevOps team to help us build and maintain our infrastructure.'
+        ];
         for (let i = 0; i < jobTitles.length; i++) {
             const job = {
                 id: uuidv4(),
@@ -115,17 +142,18 @@ export const initSeedData = () => {
                 deadline: Date.now() + 86400000 * 30, // 30 days from now
                 jobType: 'fulltime',
                 yearsOfExperienceNeed: '3-5',
-                numberOfOpenPosition: 1
+                numberOfOpenPosition: 1,
+                description: jobDescriptions[i]
             };
             jobRepository.insert(job);
             jobs.push(job);
         }
 
         // 5. Create some JOB APPLICATIONS
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < jobs.length; i++) {
             const application = {
                 id: uuidv4(),
-                applicantId: applicantProfiles[i].id,
+                applicantId: applicantProfiles[i % applicantProfiles.length].id,
                 jobId: jobs[i].id,
                 state: JOB_APPLICATION_STATE.ACTIVE,
                 jobApplicationStatus: JOB_APPLICATION_STATUS.SUBMITTED,
@@ -138,7 +166,6 @@ export const initSeedData = () => {
 
         logger.info('Database seeding complete. All initial data has been added.');
     } catch (error) {
-        console.log("error::", error)
         logger.error('Database seeding failed:', error);
     }
 };

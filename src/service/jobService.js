@@ -8,12 +8,6 @@ import { toDateString } from '../util/date.js'; // Import the new date helper
 
 const logger = log4js.getLogger('jobService');
 
-// Define constants for job states
-const JOB_STATE = {
-    ACTIVE: 1,
-    INACTIVE: 0
-};
-
 // TODO: remove this
 /**
  * Validates the years of experience format.
@@ -34,20 +28,27 @@ const JOB_STATE = {
  * @param {object} jobData The job data from the request.
  * @returns {object} The newly created job object.
  */
-export const createJob = (jobData) => {
-    // TODO: remove this
-    // // Validate the years of experience.
-    // if (jobData.yearsOfExperienceNeed && !isValidExperience(jobData.yearsOfExperienceNeed)) {
-    //     throw new Error('Invalid years of experience format. Must be a number or a range (e.g., "1-3").');
-    // } 
+ export const createJob = (jobData) => {
+    // Validate the years of experience.
+    if (jobData.yearsOfExperienceNeed && !isValidExperience(jobData.yearsOfExperienceNeed)) {
+        throw new Error('Invalid years of experience format. Must be a number or a range (e.g., "1-3").');
+    }
 
-    // Check if the company exists, if not, create it using the company service.
-    const company = companyService.findOrCreateCompanyByName({ name: jobData.companyName });
+    let company;
+    if (jobData.companyId) {
+        // Find the company by ID if it's provided.
+        company = companyService.getCompanyById(jobData.companyId);
+    } else if (jobData.companyName) {
+        // If no ID, find or create the company by name.
+        company = companyService.findOrCreateCompanyByName({ name: jobData.companyName });
+    } else {
+        throw new Error('Either companyId or companyName is required.');
+    }
 
     // Generate a unique job number with a timestamp
     const jobNumber = `JOB-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const slug = slugify(`${jobData.title}-${company.name}-${jobNumber}`, { lower: true, strict: true });
-
+    
     let deadlineTimestamp = jobData.deadline;
 
     // Convert deadline string to a timestamp if provided.
@@ -75,15 +76,19 @@ export const createJob = (jobData) => {
         deadline: deadlineTimestamp,
         jobType: jobData.jobType,
         yearsOfExperienceNeed: jobData.yearsOfExperienceNeed,
-        numberOfOpenPosition: jobData.numberOfOpenPosition
+        numberOfOpenPosition: jobData.numberOfOpenPosition,
+        description: jobData.description 
     };
+
+    logger.info("newJob::", newJob)
 
     jobRepository.insert(newJob);
     return {
         ...newJob,
         dateCreated: toDateString(newJob.dateCreated),
         datePublished: toDateString(newJob.datePublished),
-        deadline: toDateString(newJob.deadline)
+        deadline: toDateString(newJob.deadline),
+        companyName: company.name
     };
 };
 
@@ -121,6 +126,19 @@ export const findJobBySlug = (slug) => {
     };
 };
 
+export const findJobById = (id) => {
+    const job = jobRepository.findById(id);
+    if (!job) {
+        return null;
+    }
+    return {
+        ...job,
+        dateCreated: toDateString(job.dateCreated),
+        datePublished: toDateString(job.datePublished),
+        deadline: toDateString(job.deadline)
+    };
+};
+
 /**
  * Updates a job's status based on a specific action.
  * @param {string} jobNumber The unique number of the job.
@@ -139,14 +157,9 @@ export const updateJobStatus = (jobNumber, action, data) => {
     const nextState = jobStateMachine.changeState(job.jobStatus, action);
 
     let datePublished = job.datePublished;
-    // TODO: Remove this
-    // let deadline = job.deadline;
 
     if (action === 'PUBLISH') {
         datePublished = Date.now();
-        // if (data && data.deadline) {
-        //     deadline = data.deadline;
-        // }
     }
 
     jobRepository.updateJobStatus(jobNumber, nextState, datePublished);
@@ -166,4 +179,22 @@ export const updateJobStatus = (jobNumber, action, data) => {
         datePublished: toDateString(job.datePublished),
         deadline: toDateString(job.deadline)
     }));
+};
+
+
+/**
+ * Checks if an authenticated user has applied for a specific job.
+ * Endpoint: GET /job-applications/:jobId/status
+ * Access: Authenticated users only.
+ */
+ export const getApplicationStatus = (req, res) => {
+    const { id: userId } = req.user;
+    const { jobId } = req.params;
+    try {
+        const hasApplied = jobApplicationService.checkApplicationStatus(userId, jobId);
+        sendResponse(res, 200, 'Application status checked successfully.', { hasApplied });
+    } catch (error) {
+        logger.error('Failed to check application status:', error);
+        sendResponse(res, 400, error.message, null);
+    }
 };

@@ -1,5 +1,3 @@
-// This controller handles incoming requests for company management.
-
 import * as companyService from '../service/companyService.js';
 import { sendResponse } from '../util/response.js';
 import log4js from 'log4js';

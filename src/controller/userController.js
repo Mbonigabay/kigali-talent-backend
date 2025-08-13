@@ -1,6 +1,11 @@
 import { getAllUsers } from '../service/userService.js';
 import { sendResponse } from '../util/response.js';
 
+/**
+ * Handles the update of a job's status.
+ * Endpoint: PUT /jobs/update-job/status
+ * Access: Admin only
+ */
 export const getUsers = (req, res) => {
     try {
         const users = getAllUsers();

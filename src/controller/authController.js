@@ -3,6 +3,10 @@ import { sendResponse } from '../util/response.js';
 import log4js from 'log4js';
 const logger = log4js.getLogger('authController');
 
+/**
+ * Handles the registration of a user
+ * Endpoint: POST /auth/register
+ */
 export const register = (req, res) => {
     const { username, password } = req.body;
 
@@ -39,6 +43,10 @@ export const register = (req, res) => {
     }
 };
 
+/**
+ * Endpoint to verify the OTP and activate the user's account.
+ * Endpoint: POST /auth/verify-account
+ */
 export const requestAccountVerification = (req, res) => {
     const { username } = req.body;
 
@@ -55,6 +63,10 @@ export const requestAccountVerification = (req, res) => {
     }
 };
 
+/**
+ * Endpoint to send an OTP to the user's email.
+ * Endpoint: POST /auth/verify-account-request
+ */
 export const verifyAccount = (req, res) => {
     const { username, token } = req.body;
 

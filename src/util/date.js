@@ -8,6 +8,5 @@
         return null;
     }
     const date = new Date(timestamp);
-    // You can customize the date format here.
     return date.toLocaleString();
 };

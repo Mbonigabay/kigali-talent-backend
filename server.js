@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import errorHandler from './src/middleware/error.js';
 import mainRouter from './src/route/index.js';
@@ -13,6 +14,10 @@ const port = process.env.PORT || 8000;
 const app = express();
 
 app.use(express.json());
+
+// Use cors middleware to allow requests from the React frontend.
+// This is crucial to fix the CORS policy error.
+app.use(cors());
 
 // Use the logger middleware at the beginning to log every request.
 app.use(logger);

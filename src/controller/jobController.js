@@ -68,6 +68,26 @@ export const getJobBySlug = (req, res) => {
 };
 
 /**
+ * Handles the request to view a job by its ID.
+ * Endpoint: GET /jobs/id/:id
+ * Access: Admin only
+ */
+ export const getJobById = (req, res) => {
+    try {
+        const { id } = req.params;
+        const job = jobService.findJobById(id);
+        if (!job) {
+            return sendResponse(res, 404, 'Job not found.', null);
+        }
+        sendResponse(res, 200, 'Job retrieved successfully.', job);
+    } catch (error) {
+        logger.error('Failed to retrieve job by ID:', error);
+        sendResponse(res, 500, 'Server Error', null);
+    }
+};
+
+
+/**
  * Handles the update of a job's status.
  * Endpoint: PUT /jobs/update-job/status
  * Access: Admin only

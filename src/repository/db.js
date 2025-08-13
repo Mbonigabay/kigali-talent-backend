@@ -1,13 +1,7 @@
-// This file centralizes all database logic into a single module.
-// It creates a shared connection and handles all table creation.
-
 import Database from 'better-sqlite3';
-// Import log4js for logging messages
 import log4js from 'log4js';
-// Import the seeding function
 import { initSeedData } from './dbSeeder.js';
 
-// Use a dedicated logger for this module
 const logger = log4js.getLogger('db');
 
 // Create a single, shared database instance.
@@ -64,6 +58,7 @@ const createJobsTable = () => {
             jobType TEXT CHECK (jobType IN ('fulltime', 'partime', 'volunteer', 'contract', 'internship')),
             yearsOfExperienceNeed TEXT,
             numberOfOpenPosition INTEGER,
+            description TEXT,
             FOREIGN KEY (companyId) REFERENCES companies(id) ON DELETE CASCADE
         )
     `);
@@ -98,7 +93,7 @@ const createJobApplicationsTable = () => {
             applicantId TEXT NOT NULL,
             jobId TEXT NOT NULL,
             state INTEGER NOT NULL CHECK (state IN (0, 1)),
-            jobApplicationStatus TEXT NOT NULL CHECK (jobApplicationStatus IN ('submitted', 'viewed', 'interviewing', 'offer', 'hired', 'rejected')),
+            jobApplicationStatus TEXT NOT NULL CHECK (jobApplicationStatus IN ('submitted', 'shortlisted', 'interviewing', 'offer', 'hired', 'rejected')),
             dateCreated INTEGER NOT NULL,
             lastDateModified INTEGER NOT NULL,
             UNIQUE(applicantId, jobId),
@@ -120,6 +115,40 @@ const createVerificationTokensTable = () => {
         )
     `);
     logger.info("'verification_tokens' table created or already exists.");
+};
+
+// A new method to create the 'education' table.
+const createEducationTable = () => {
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS education (
+            id TEXT PRIMARY KEY,
+            applicantId TEXT NOT NULL,
+            school TEXT NOT NULL,
+            levelOfEducation TEXT NOT NULL,
+            fieldOfStudy TEXT,
+            description TEXT,
+            yearOfGraduation INTEGER,
+            FOREIGN KEY (applicantId) REFERENCES applicants(id) ON DELETE CASCADE
+        )
+    `);
+    logger.info("'education' table created or already exists.");
+};
+
+// A new method to create the 'experience' table.
+const createExperienceTable = () => {
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS experience (
+            id TEXT PRIMARY KEY,
+            applicantId TEXT NOT NULL,
+            companyName TEXT NOT NULL,
+            role TEXT NOT NULL,
+            startDate INTEGER NOT NULL,
+            endDate INTEGER,
+            description TEXT,
+            FOREIGN KEY (applicantId) REFERENCES applicants(id) ON DELETE CASCADE
+        )
+    `);
+    logger.info("'experience' table created or already exists.");
 };
 
 // A method to create the 'password_reset_tokens' table.
@@ -147,6 +176,8 @@ export const initializeDb = () => {
         createApplicantsTable();
         createJobApplicationsTable();
         createVerificationTokensTable();
+        createEducationTable();
+        createExperienceTable();
         createPasswordResetTokensTable();
         logger.info('All database tables created or already exist.');
     } catch (error) {

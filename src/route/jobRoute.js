@@ -16,6 +16,9 @@ router.get('/all', authenticateJWT, authorizeRole('ROLE_ADMIN'), jobController.g
 // Route to get a single job by its slug (Public access)
 router.get('/:slug', jobController.getJobBySlug);
 
+// Route to get a single job by its ID (Admin only)
+router.get('/id/:id', authenticateJWT, authorizeRole('ROLE_ADMIN'), jobController.getJobById);
+
 // Route to update a job's status (Admin only)
 router.put('/update-job/status', authenticateJWT, authorizeRole('ROLE_ADMIN'), jobController.updateJobStatus);
 

@@ -39,6 +39,24 @@ export const applyForJob = (req, res) => {
 
 
 /**
+ * Checks if an authenticated user has applied for a specific job.
+ * Endpoint: GET /job-applications/:jobId/status
+ * Access: Authenticated users only.
+ */
+ export const getApplicationStatus = (req, res) => {
+    const { id: userId } = req.user;
+    const { jobId } = req.params;
+    try {
+        const hasApplied = jobApplicationService.checkApplicationStatus(userId, jobId);
+        sendResponse(res, 200, 'Application status checked successfully.', { hasApplied });
+    } catch (error) {
+        logger.error('Failed to check application status:', error);
+        sendResponse(res, 400, error.message, null);
+    }
+};
+
+
+/**
  * Handles the update of a job application's status.
  * Endpoint: PUT /update-job-application/status
  * Access: Admin only.
@@ -54,9 +72,25 @@ export const applyForJob = (req, res) => {
 
     try {
         const result = jobApplicationService.updateJobApplicationStatus(jobApplicationId, action);
-        sendResponse(res, 200, result.message, null);
+        sendResponse(res, 200, result.message, { newStatus: result.newStatus });
     } catch (error) {
         logger.error('Failed to update job application status:', error);
         sendResponse(res, 400, error.message, null);
+    }
+};
+
+/**
+ * Retrieves all applications for the authenticated user.
+ * Endpoint: GET /job-applications/my-applications
+ * Access: Authenticated applicants only.
+ */
+ export const getMyApplications = (req, res) => {
+    const { id: userId } = req.user;
+    try {
+        const applications = jobApplicationService.getApplicationsForApplicant(userId);
+        sendResponse(res, 200, 'My applications retrieved successfully.', applications);
+    } catch (error) {
+        logger.error('Failed to retrieve my applications:', error);
+        sendResponse(res, 500, error.message, null);
     }
 };
